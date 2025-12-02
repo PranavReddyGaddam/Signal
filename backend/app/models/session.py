@@ -6,10 +6,13 @@ from enum import Enum
 
 class SessionStatus(str, Enum):
     PENDING = "pending"
+    PROCESSING = "processing"
     INTENT_EXTRACTED = "intent_extracted"
-    PATTERN_DISCOVERY = "pattern_discovery"
+    PATTERNS_DISCOVERING = "patterns_discovering"
+    PATTERNS_DISCOVERED = "patterns_discovered"
     PATTERNS_VALIDATED = "patterns_validated"
-    LEAD_GENERATION = "lead_generation"
+    LEADS_GENERATING = "leads_generating"
+    LEADS_GENERATED = "leads_generated"
     COMPLETED = "completed"
     FAILED = "failed"
 

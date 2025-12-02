@@ -1,19 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, List
 import uuid
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.models.lead import LeadData, SignalAnalysis, LeadAnalysisResult, LeadReport
 from app.models.pattern import PatternReport
+from app.models.db.lead import LeadReportDB
+from app.models.base import get_db
 
 router = APIRouter()
 
-# In-memory storage for development
-lead_reports: Dict[str, LeadReport] = {}
-
 
 @router.post("/generate", response_model=LeadReport)
-async def generate_leads(pattern_report: PatternReport) -> LeadReport:
+async def generate_leads(pattern_report: PatternReport, db: Session = Depends(get_db)) -> LeadReport:
     """
     Generate qualified leads based on discovered patterns.
     
@@ -23,12 +23,37 @@ async def generate_leads(pattern_report: PatternReport) -> LeadReport:
         # Mock lead generation
         mock_report = _mock_lead_generation(pattern_report)
         
-        report = LeadReport(
-            **mock_report,
+        # Create database record
+        db_report = LeadReportDB(
+            id=mock_report["id"],
+            session_id=mock_report["session_id"],
+            pattern_report_id=mock_report["pattern_report_id"],
+            industry=mock_report["industry"],
+            country=mock_report["country"],
+            leads_generated=mock_report["leads_generated"],
+            analysis_duration=mock_report["analysis_duration"],
+            leads=mock_report["leads"],
+            high_priority_leads=mock_report["high_priority_leads"],
+            medium_priority_leads=mock_report["medium_priority_leads"],
+            low_priority_leads=mock_report["low_priority_leads"],
+            average_quality_score=mock_report["average_quality_score"],
+            pattern_coverage=mock_report["pattern_coverage"],
+            key_insights=mock_report["key_insights"],
+            market_opportunities=mock_report["market_opportunities"],
+            recommended_approach=mock_report["recommended_approach"],
+            export_formats=mock_report["export_formats"],
             generated_at=datetime.utcnow()
         )
         
-        lead_reports[report.id] = report
+        db.add(db_report)
+        db.commit()
+        db.refresh(db_report)
+        
+        report = LeadReport(
+            **mock_report,
+            generated_at=db_report.generated_at
+        )
+        
         return report
     
     except Exception as e:
@@ -36,22 +61,66 @@ async def generate_leads(pattern_report: PatternReport) -> LeadReport:
 
 
 @router.get("/{report_id}", response_model=LeadReport)
-async def get_lead_report(report_id: str) -> LeadReport:
+async def get_lead_report(report_id: str, db: Session = Depends(get_db)) -> LeadReport:
     """
     Get lead report by ID.
     """
-    if report_id not in lead_reports:
+    db_report = db.query(LeadReportDB).filter(LeadReportDB.id == report_id).first()
+    if not db_report:
         raise HTTPException(status_code=404, detail="Lead report not found")
     
-    return lead_reports[report_id]
+    return LeadReport(
+        id=db_report.id,
+        session_id=db_report.session_id,
+        pattern_report_id=db_report.pattern_report_id,
+        industry=db_report.industry,
+        country=db_report.country,
+        leads_generated=db_report.leads_generated,
+        analysis_duration=db_report.analysis_duration,
+        leads=db_report.leads,
+        high_priority_leads=db_report.high_priority_leads,
+        medium_priority_leads=db_report.medium_priority_leads,
+        low_priority_leads=db_report.low_priority_leads,
+        average_quality_score=db_report.average_quality_score,
+        pattern_coverage=db_report.pattern_coverage,
+        key_insights=db_report.key_insights,
+        market_opportunities=db_report.market_opportunities,
+        recommended_approach=db_report.recommended_approach,
+        export_formats=db_report.export_formats,
+        generated_at=db_report.generated_at
+    )
 
 
 @router.get("/", response_model=List[LeadReport])
-async def list_lead_reports() -> List[LeadReport]:
+async def list_lead_reports(db: Session = Depends(get_db)) -> List[LeadReport]:
     """
     List all lead reports.
     """
-    return list(lead_reports.values())
+    db_reports = db.query(LeadReportDB).all()
+    
+    return [
+        LeadReport(
+            id=r.id,
+            session_id=r.session_id,
+            pattern_report_id=r.pattern_report_id,
+            industry=r.industry,
+            country=r.country,
+            leads_generated=r.leads_generated,
+            analysis_duration=r.analysis_duration,
+            leads=r.leads,
+            high_priority_leads=r.high_priority_leads,
+            medium_priority_leads=r.medium_priority_leads,
+            low_priority_leads=r.low_priority_leads,
+            average_quality_score=r.average_quality_score,
+            pattern_coverage=r.pattern_coverage,
+            key_insights=r.key_insights,
+            market_opportunities=r.market_opportunities,
+            recommended_approach=r.recommended_approach,
+            export_formats=r.export_formats,
+            generated_at=r.generated_at
+        )
+        for r in db_reports
+    ]
 
 
 def _mock_lead_generation(pattern_report: PatternReport) -> Dict[str, Any]:

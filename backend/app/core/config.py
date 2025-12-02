@@ -1,12 +1,21 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
-import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure .env is loaded once for all modules
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "GTM Pattern Engine"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+    
+    # Environment
+    ENVIRONMENT: str = "development"
+    DEBUG: bool = True
     
     # Security
     SECRET_KEY: str = "your-secret-key-here-change-in-production"
@@ -38,6 +47,8 @@ class Settings(BaseSettings):
     # External APIs
     CRUNCHBASE_API_KEY: Optional[str] = None
     LINKEDIN_API_KEY: Optional[str] = None
+    OPENROUTER_API_KEY: Optional[str] = None
+    USE_REAL_LLM: bool = False
     
     # Agent Settings
     MAX_COMPANIES_TO_ANALYZE: int = 15
@@ -48,6 +59,14 @@ class Settings(BaseSettings):
     # Processing
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Parse BACKEND_CORS_ORIGINS from string if needed
+        if isinstance(self.BACKEND_CORS_ORIGINS, str):
+            self.BACKEND_CORS_ORIGINS = [
+                origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            ]
     
     class Config:
         env_file = ".env"

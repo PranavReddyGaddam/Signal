@@ -1,19 +1,19 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Dict, Any, List
 import uuid
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.models.pattern import SuccessPattern, PatternReport
 from app.models.intent import IntentExtractionResult
+from app.models.db.pattern import PatternReportDB, SuccessPatternDB
+from app.models.base import get_db
 
 router = APIRouter()
 
-# In-memory storage for development
-pattern_reports: Dict[str, PatternReport] = {}
-
 
 @router.post("/discover", response_model=PatternReport)
-async def discover_patterns(intent: IntentExtractionResult) -> PatternReport:
+async def discover_patterns(intent: IntentExtractionResult, db: Session = Depends(get_db)) -> PatternReport:
     """
     Discover success patterns based on extracted intent.
     
@@ -23,12 +23,32 @@ async def discover_patterns(intent: IntentExtractionResult) -> PatternReport:
         # Mock pattern discovery
         mock_report = _mock_pattern_discovery(intent)
         
-        report = PatternReport(
-            **mock_report,
+        # Create database record
+        db_report = PatternReportDB(
+            id=mock_report["id"],
+            session_id=mock_report["session_id"],
+            industry=mock_report["industry"],
+            country=mock_report["country"],
+            companies_analyzed=mock_report["companies_analyzed"],
+            analysis_duration=mock_report["analysis_duration"],
+            patterns=mock_report["patterns"],
+            total_patterns=mock_report["total_patterns"],
+            average_confidence=mock_report["average_confidence"],
+            high_confidence_patterns=mock_report["high_confidence_patterns"],
+            key_insights=mock_report["key_insights"],
+            recommendations=mock_report["recommendations"],
             generated_at=datetime.utcnow()
         )
         
-        pattern_reports[report.id] = report
+        db.add(db_report)
+        db.commit()
+        db.refresh(db_report)
+        
+        report = PatternReport(
+            **mock_report,
+            generated_at=db_report.generated_at
+        )
+        
         return report
     
     except Exception as e:
@@ -36,22 +56,56 @@ async def discover_patterns(intent: IntentExtractionResult) -> PatternReport:
 
 
 @router.get("/{report_id}", response_model=PatternReport)
-async def get_pattern_report(report_id: str) -> PatternReport:
+async def get_pattern_report(report_id: str, db: Session = Depends(get_db)) -> PatternReport:
     """
     Get pattern report by ID.
     """
-    if report_id not in pattern_reports:
+    db_report = db.query(PatternReportDB).filter(PatternReportDB.id == report_id).first()
+    if not db_report:
         raise HTTPException(status_code=404, detail="Pattern report not found")
     
-    return pattern_reports[report_id]
+    return PatternReport(
+        id=db_report.id,
+        session_id=db_report.session_id,
+        industry=db_report.industry,
+        country=db_report.country,
+        companies_analyzed=db_report.companies_analyzed,
+        analysis_duration=db_report.analysis_duration,
+        patterns=db_report.patterns,
+        total_patterns=db_report.total_patterns,
+        average_confidence=db_report.average_confidence,
+        high_confidence_patterns=db_report.high_confidence_patterns,
+        key_insights=db_report.key_insights,
+        recommendations=db_report.recommendations,
+        generated_at=db_report.generated_at
+    )
 
 
 @router.get("/", response_model=List[PatternReport])
-async def list_pattern_reports() -> List[PatternReport]:
+async def list_pattern_reports(db: Session = Depends(get_db)) -> List[PatternReport]:
     """
     List all pattern reports.
     """
-    return list(pattern_reports.values())
+    db_reports = db.query(PatternReportDB).all()
+    
+    return [
+        PatternReport(
+            id=r.id,
+            session_id=r.session_id,
+            industry=r.industry,
+            country=r.country,
+            companies_analyzed=r.companies_analyzed,
+            analysis_duration=r.analysis_duration,
+            patterns=r.patterns,
+            total_patterns=r.total_patterns,
+            average_confidence=r.average_confidence,
+            high_confidence_patterns=r.high_confidence_patterns,
+            key_insights=r.key_insights,
+            recommendations=r.recommendations,
+            generated_at=r.generated_at
+        )
+        for r in db_reports
+    ]
 
 
 def _mock_pattern_discovery(intent: IntentExtractionResult) -> Dict[str, Any]:
