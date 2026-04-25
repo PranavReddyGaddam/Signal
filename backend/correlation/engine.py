@@ -115,7 +115,20 @@ async def run() -> None:
             continue
 
         all_tags = list({tag for e in cluster for tag in (e.get("sector_tags") or [])})
-        confidence = float(implications.get("overall_confidence", 0.5))
+
+        # Data-driven confidence: avg magnitude + source diversity (no sum saturation)
+        n_events = len(cluster)
+        magnitude_sum = sum(float(e.get("magnitude", 0)) for e in cluster)
+        avg_mag = magnitude_sum / n_events if n_events else 0
+        n_sources = len({e.get("source", "") for e in cluster})
+        computed_confidence = min(0.90, max(0.20, round(
+            0.55 * min(1.0, avg_mag / 0.5) +
+            0.45 * min(1.0, n_sources / 3.0),
+            2,
+        )))
+        # Use AI confidence only if it differs from the 0.5 fallback default
+        ai_confidence = float(implications.get("overall_confidence", 0.5))
+        confidence = ai_confidence if ai_confidence != 0.5 else computed_confidence
 
         def _insert_signal(impl=implications, tags=all_tags, conf=confidence, eids=list(existing_ids)):
             return _db.table("signals").insert({
