@@ -86,7 +86,6 @@ function SlideIntro() {
   return (
     <SlideWrapper id="intro" index={0} bg="#0a0a0a">
       <div className="max-w-4xl mx-auto px-8 text-center flex flex-col items-center gap-8">
-        <Tag color="#ffd700">Hackathon Demo 2025</Tag>
         <h1
           className="text-[clamp(72px,14vw,160px)] font-black tracking-[0.3em] text-[#ffd700] font-mono leading-none"
           style={{ textShadow: "6px 6px 0 rgba(255,215,0,0.2)" }}
