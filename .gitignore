@@ -2,6 +2,10 @@
 worldmonitor/
 ai-hedge-fund/
 
+# Personal notes / presentation material
+PRESENTATION_SCRIPT.md
+SYSTEM_DESIGN.md
+
 # Environment variables — never commit secrets
 .env
 .env.*
