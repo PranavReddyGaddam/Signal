@@ -237,7 +237,7 @@ async def _compute_all() -> list[dict]:
     results = await asyncio.gather(*tasks)
     valid = [r for r in results if r is not None]
     valid.sort(key=lambda x: x["score"], reverse=True)
-    return valid[:15]
+    return valid  # keep all, trim to top 15 only at the API response level
 
 
 async def _get_live_scores() -> list[dict]:
@@ -321,16 +321,29 @@ async def get_risk(
         fixtures = _load_fixtures()
         s = next((x for x in fixtures["scenarios"] if x["name"] == scenario), fixtures["scenarios"][0])
         return s.get("risk", [])
-    return await _get_live_scores()
+    scores = await _get_live_scores()
+    return scores[:15]  # top 15 for the dashboard list
 
 
 @router.get("/risk/{code}")
 async def get_risk_detail(code: str, request: Request):
-    """Return full detail for one country including articles + AI brief."""
+    """Return full detail for one country including articles + AI brief.
+    Falls back to scoring on demand if the country isn't in the cache."""
+    from fastapi import HTTPException
+    code = code.upper()
     scores = await _get_live_scores()
-    country = next((c for c in scores if c["code"] == code.upper()), None)
+    country = next((c for c in scores if c["code"] == code), None)
+
+    # Not in cache — score it on demand if it's a watched country
     if not country:
-        from fastapi import HTTPException
-        raise HTTPException(404, f"Country {code} not found")
+        if code not in WATCH_COUNTRIES:
+            raise HTTPException(404, f"Country {code} not tracked")
+        name, query = WATCH_COUNTRIES[code]
+        try:
+            country = await _score_country(code, name, query)
+        except Exception as e:
+            log.warning(f"[risk] on-demand score failed {code}: {e}")
+            raise HTTPException(500, f"Failed to score {code}")
+
     brief = await _ai_country_brief(country)
     return {**country, "ai_brief": brief}
