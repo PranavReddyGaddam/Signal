@@ -1,0 +1,42 @@
+{
+  "oil_supply_disruption": {
+    "sectors": ["energy", "industrials"],
+    "tickers": ["XLE", "XOM", "CVX", "USO", "DAL", "UPS"]
+  },
+  "fed_rate_hold": {
+    "sectors": ["financials", "real_estate"],
+    "tickers": ["XLF", "KRE", "VNQ", "TLT"]
+  },
+  "geopolitical_conflict": {
+    "sectors": ["defense", "energy", "materials"],
+    "tickers": ["LMT", "RTX", "XLE", "GLD"]
+  },
+  "jobs_miss": {
+    "sectors": ["consumer", "financials"],
+    "tickers": ["XLY", "XLP", "XLF"]
+  },
+  "supply_chain_disruption": {
+    "sectors": ["industrials", "consumer", "tech"],
+    "tickers": ["XLI", "XLY", "XLK", "FDX", "UPS"]
+  },
+  "inflation_spike": {
+    "sectors": ["consumer", "materials", "energy"],
+    "tickers": ["XLP", "XLB", "XLE", "TIP", "GLD"]
+  },
+  "credit_stress": {
+    "sectors": ["financials", "real_estate"],
+    "tickers": ["XLF", "KRE", "HYG", "VNQ"]
+  },
+  "tech_regulation": {
+    "sectors": ["tech"],
+    "tickers": ["XLK", "AAPL", "GOOGL", "META", "MSFT"]
+  },
+  "dollar_strength": {
+    "sectors": ["materials", "energy", "emerging_markets"],
+    "tickers": ["GLD", "USO", "XLB", "EEM"]
+  },
+  "yield_curve_inversion": {
+    "sectors": ["financials", "real_estate", "utilities"],
+    "tickers": ["XLF", "VNQ", "XLU", "TLT"]
+  }
+}

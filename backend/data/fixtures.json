@@ -1,0 +1,241 @@
+{
+  "scenarios": [
+    {
+      "name": "oil_shock",
+      "signals": [
+        {
+          "id": "a1b2c3d4-0001-0001-0001-000000000001",
+          "created_at": "2026-04-23T14:00:00Z",
+          "sector_tags": ["energy", "geopolitical"],
+          "confidence": 0.87,
+          "ai_implications": {
+            "summary": "Iranian tanker seizures in the Strait of Hormuz combined with a 3.2% spike in crude inventories draw-down signal imminent oil supply disruption. Energy sector faces a sharp upside move as Brent pushes toward $105.",
+            "affected_sectors": ["energy", "industrials", "materials"],
+            "tickers": [
+              {"symbol": "USO", "direction": "bullish", "confidence": 0.91, "reasoning": "Direct crude oil exposure; supply squeeze historically drives 8-12% moves in USO within 72h of Hormuz incidents."},
+              {"symbol": "XLE", "direction": "bullish", "confidence": 0.88, "reasoning": "Energy sector ETF benefits from higher realized oil prices boosting upstream producer margins."},
+              {"symbol": "XOM", "direction": "bullish", "confidence": 0.84, "reasoning": "Exxon's Gulf production insulated from disruption while higher global prices lift revenue."},
+              {"symbol": "DAL", "direction": "bearish", "confidence": 0.79, "reasoning": "Airlines face 6-9% jet fuel cost inflation per $10 crude increase, compressing margins."},
+              {"symbol": "GLD", "direction": "bullish", "confidence": 0.72, "reasoning": "Geopolitical risk premium historically adds 2-4% to gold within one week of major oil shocks."}
+            ],
+            "overall_confidence": 0.87,
+            "historical_pattern": "Similar to July 2019 Gulf of Oman tanker incidents and 1990 Gulf War onset. Energy equities rallied 15-22% over 30 days while transportation stocks fell 8-12%."
+          },
+          "events": [
+            {"id": "e1000001-0001-0001-0001-000000000001", "title": "Iran seizes oil tanker near Strait of Hormuz, third incident this month", "source": "NewsAPI", "magnitude": 0.82},
+            {"id": "e1000002-0001-0001-0001-000000000002", "title": "XLE moved +3.1% today", "source": "yfinance", "magnitude": 0.71},
+            {"id": "e1000003-0001-0001-0001-000000000003", "title": "USO moved +2.8% today", "source": "yfinance", "magnitude": 0.68}
+          ]
+        },
+        {
+          "id": "a1b2c3d4-0001-0001-0001-000000000002",
+          "created_at": "2026-04-23T13:30:00Z",
+          "sector_tags": ["energy", "materials"],
+          "confidence": 0.74,
+          "ai_implications": {
+            "summary": "Bab el-Mandeb shipping lane disruption compounds existing Red Sea rerouting costs. Tanker day rates up 40% MoM. Materials and industrial supply chains face extended lead times.",
+            "affected_sectors": ["materials", "industrials", "consumer"],
+            "tickers": [
+              {"symbol": "XLB", "direction": "bullish", "confidence": 0.77, "reasoning": "Commodity materials benefit from transportation bottleneck inflating input costs globally."},
+              {"symbol": "XLI", "direction": "bearish", "confidence": 0.71, "reasoning": "Industrial supply chains dependent on Asia-Europe routes face cost headwinds."},
+              {"symbol": "GLD", "direction": "bullish", "confidence": 0.68, "reasoning": "Safe haven demand elevated amid dual chokepoint risk."}
+            ],
+            "overall_confidence": 0.74,
+            "historical_pattern": "Resembles 2024 Houthi Red Sea disruption. Shipping indices surged 200% while industrial margins contracted 150-200bps over 60 days."
+          },
+          "events": [
+            {"id": "e1000004-0001-0001-0001-000000000004", "title": "Houthi drone attack closes Bab el-Mandeb shipping lane to commercial traffic", "source": "NewsAPI", "magnitude": 0.76},
+            {"id": "e1000005-0001-0001-0001-000000000005", "title": "XLB moved +1.9% today", "source": "yfinance", "magnitude": 0.45}
+          ]
+        }
+      ],
+      "brief": {
+        "content": "Dual chokepoint risk is crystallizing in energy markets as Iranian tanker seizures near Hormuz coincide with Houthi closures of Bab el-Mandeb. Crude inventories are drawing faster than seasonal norms, with Brent approaching $105. Energy equities (XLE +3.1%, USO +2.8%) are leading sector gains while airlines and industrials face margin compression from elevated fuel and freight costs. Gold is catching a geopolitical bid. Historical precedent suggests energy outperformance extends 15-22% over 30 days in comparable supply shock regimes.",
+        "created_at": "2026-04-23T14:00:00Z"
+      },
+      "macro": [
+        {"series_id": "FEDFUNDS", "label": "Fed Funds Rate", "value": 5.33, "units": "%", "trend": "flat", "magnitude": 0.02, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "T10Y2Y", "label": "Yield Curve (10Y-2Y)", "value": -0.41, "units": "%", "trend": "up", "magnitude": 0.08, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "BAMLH0A0HYM2", "label": "HY Credit Spread", "value": 3.82, "units": "%", "trend": "up", "magnitude": 0.12, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "ICSA", "label": "Jobless Claims", "value": 218000, "units": "thousands", "trend": "down", "magnitude": 0.04, "fetched_at": "2026-04-23T12:00:00Z"}
+      ],
+      "chokepoints": [
+        {"name": "Strait of Hormuz", "risk_level": "critical", "top_tickers": [{"symbol": "USO", "direction": "bullish"}, {"symbol": "XLE", "direction": "bullish"}], "signal_count": 3},
+        {"name": "Suez Canal", "risk_level": "elevated", "top_tickers": [{"symbol": "XLB", "direction": "bullish"}, {"symbol": "XLI", "direction": "bearish"}], "signal_count": 1},
+        {"name": "Taiwan Strait", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Bab el-Mandeb", "risk_level": "critical", "top_tickers": [{"symbol": "GLD", "direction": "bullish"}, {"symbol": "USO", "direction": "bullish"}], "signal_count": 2},
+        {"name": "Kerch Strait", "risk_level": "normal", "top_tickers": [], "signal_count": 0}
+      ],
+      "risk": [
+        {"code": "IR", "name": "Iran",         "score": 82, "level": "critical",  "trend": "up",   "components": {"unrest": 48, "conflict": 85, "security": 72, "information": 18}},
+        {"code": "YE", "name": "Yemen",        "score": 76, "level": "critical",  "trend": "up",   "components": {"unrest": 35, "conflict": 88, "security": 45, "information": 16}},
+        {"code": "RU", "name": "Russia",       "score": 71, "level": "critical",  "trend": "flat", "components": {"unrest": 28, "conflict": 80, "security": 65, "information": 14}},
+        {"code": "UA", "name": "Ukraine",      "score": 67, "level": "high",      "trend": "flat", "components": {"unrest": 40, "conflict": 78, "security": 52, "information": 12}},
+        {"code": "IL", "name": "Israel",       "score": 65, "level": "high",      "trend": "up",   "components": {"unrest": 38, "conflict": 74, "security": 60, "information": 18}},
+        {"code": "IQ", "name": "Iraq",         "score": 55, "level": "high",      "trend": "up",   "components": {"unrest": 30, "conflict": 62, "security": 42, "information": 11}},
+        {"code": "SY", "name": "Syria",        "score": 51, "level": "elevated",  "trend": "flat", "components": {"unrest": 22, "conflict": 68, "security": 38, "information": 9}},
+        {"code": "AF", "name": "Afghanistan",  "score": 48, "level": "elevated",  "trend": "flat", "components": {"unrest": 18, "conflict": 60, "security": 32, "information": 8}},
+        {"code": "SD", "name": "Sudan",        "score": 44, "level": "elevated",  "trend": "down", "components": {"unrest": 25, "conflict": 55, "security": 28, "information": 7}},
+        {"code": "LY", "name": "Libya",        "score": 41, "level": "elevated",  "trend": "flat", "components": {"unrest": 20, "conflict": 50, "security": 30, "information": 7}}
+      ]
+    },
+    {
+      "name": "fed_pivot",
+      "signals": [
+        {
+          "id": "a1b2c3d4-0002-0002-0002-000000000001",
+          "created_at": "2026-04-23T14:00:00Z",
+          "sector_tags": ["financials", "macro"],
+          "confidence": 0.83,
+          "ai_implications": {
+            "summary": "Fed signals dovish pivot with three rate cuts priced in for 2026. Yield curve normalizing from -41bps inversion. Financial sector re-rating and real estate relief are the primary plays.",
+            "affected_sectors": ["financials", "real_estate", "utilities"],
+            "tickers": [
+              {"symbol": "XLF", "direction": "bullish", "confidence": 0.86, "reasoning": "Net interest margin expansion anticipated as yield curve steepens from inversion. Banks historically outperform 12-18% post-pivot."},
+              {"symbol": "KRE", "direction": "bullish", "confidence": 0.81, "reasoning": "Regional banks most sensitive to curve steepening; deposit costs fall faster than loan yields."},
+              {"symbol": "VNQ", "direction": "bullish", "confidence": 0.78, "reasoning": "REITs benefit from lower cap rate environment and reduced financing costs."},
+              {"symbol": "TLT", "direction": "bullish", "confidence": 0.88, "reasoning": "Long duration bonds rally directly as rate cut path is priced in."},
+              {"symbol": "HYG", "direction": "bullish", "confidence": 0.71, "reasoning": "High yield spreads compress as risk appetite improves with easier financial conditions."}
+            ],
+            "overall_confidence": 0.83,
+            "historical_pattern": "Mirrors 2019 Fed pivot and 1995 soft landing. Financials rallied 18-24% in the 6 months following the first cut while long-duration assets outperformed."
+          },
+          "events": [
+            {"id": "e2000001-0002-0002-0002-000000000001", "title": "Fed Chair signals three rate cuts in 2026, cites cooling inflation and labor market balance", "source": "NewsAPI", "magnitude": 0.88},
+            {"id": "e2000002-0002-0002-0002-000000000002", "title": "T10Y2Y yield spread deviation from 90-day MA: +18.3%", "source": "FRED", "magnitude": 0.74},
+            {"id": "e2000003-0002-0002-0002-000000000003", "title": "XLF moved +2.4% today", "source": "yfinance", "magnitude": 0.58}
+          ]
+        },
+        {
+          "id": "a1b2c3d4-0002-0002-0002-000000000002",
+          "created_at": "2026-04-23T13:00:00Z",
+          "sector_tags": ["labor", "macro"],
+          "confidence": 0.69,
+          "ai_implications": {
+            "summary": "Jobless claims printing below 220k alongside UNRATE holding at 3.9% reinforces soft landing thesis and removes downside risk from Fed's rate path.",
+            "affected_sectors": ["consumer", "financials"],
+            "tickers": [
+              {"symbol": "XLY", "direction": "bullish", "confidence": 0.73, "reasoning": "Consumer discretionary benefits from employed, confident consumer base."},
+              {"symbol": "XLP", "direction": "flat", "confidence": 0.51, "reasoning": "Defensive staples underperform in risk-on soft landing scenario."}
+            ],
+            "overall_confidence": 0.69,
+            "historical_pattern": "1995-1996 soft landing saw consumer discretionary outperform staples by 22% over 12 months."
+          },
+          "events": [
+            {"id": "e2000004-0002-0002-0002-000000000004", "title": "ICSA initial jobless claims 218K, below 225K consensus", "source": "FRED", "magnitude": 0.41},
+            {"id": "e2000005-0002-0002-0002-000000000005", "title": "UNRATE unemployment rate holds at 3.9%, third consecutive month", "source": "FRED", "magnitude": 0.28}
+          ]
+        }
+      ],
+      "brief": {
+        "content": "The Federal Reserve's pivot to three projected 2026 cuts is reshaping the rate landscape. The 10Y-2Y curve is normalizing from -41bps as markets price the easing cycle, lifting financials (XLF +2.4%) and long-duration assets (TLT). A resilient labor market — jobless claims at 218K, unemployment 3.9% — validates the soft landing thesis and reduces recession risk premium. Regional banks and REITs stand to benefit most from curve steepening. Consumer discretionary outperformance over staples historically follows this setup by 20+ percentage points over 12 months.",
+        "created_at": "2026-04-23T14:00:00Z"
+      },
+      "macro": [
+        {"series_id": "FEDFUNDS", "label": "Fed Funds Rate", "value": 5.33, "units": "%", "trend": "down", "magnitude": 0.06, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "T10Y2Y", "label": "Yield Curve (10Y-2Y)", "value": -0.18, "units": "%", "trend": "up", "magnitude": 0.18, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "BAMLH0A0HYM2", "label": "HY Credit Spread", "value": 3.21, "units": "%", "trend": "down", "magnitude": 0.09, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "ICSA", "label": "Jobless Claims", "value": 218000, "units": "thousands", "trend": "down", "magnitude": 0.05, "fetched_at": "2026-04-23T12:00:00Z"}
+      ],
+      "chokepoints": [
+        {"name": "Strait of Hormuz", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Suez Canal", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Taiwan Strait", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Bab el-Mandeb", "risk_level": "elevated", "top_tickers": [{"symbol": "USO", "direction": "flat"}, {"symbol": "XLI", "direction": "bearish"}], "signal_count": 1},
+        {"name": "Kerch Strait", "risk_level": "normal", "top_tickers": [], "signal_count": 0}
+      ],
+      "risk": [
+        {"code": "RU", "name": "Russia",       "score": 70, "level": "critical",  "trend": "flat", "components": {"unrest": 25, "conflict": 78, "security": 62, "information": 12}},
+        {"code": "UA", "name": "Ukraine",      "score": 65, "level": "high",      "trend": "flat", "components": {"unrest": 38, "conflict": 75, "security": 48, "information": 11}},
+        {"code": "IL", "name": "Israel",       "score": 62, "level": "high",      "trend": "flat", "components": {"unrest": 35, "conflict": 70, "security": 55, "information": 15}},
+        {"code": "YE", "name": "Yemen",        "score": 58, "level": "high",      "trend": "down", "components": {"unrest": 28, "conflict": 72, "security": 38, "information": 12}},
+        {"code": "IR", "name": "Iran",         "score": 55, "level": "high",      "trend": "down", "components": {"unrest": 30, "conflict": 60, "security": 50, "information": 10}},
+        {"code": "KP", "name": "North Korea",  "score": 50, "level": "elevated",  "trend": "flat", "components": {"unrest": 5,  "conflict": 45, "security": 55, "information": 8}},
+        {"code": "MM", "name": "Myanmar",      "score": 46, "level": "elevated",  "trend": "flat", "components": {"unrest": 30, "conflict": 55, "security": 28, "information": 7}},
+        {"code": "SY", "name": "Syria",        "score": 44, "level": "elevated",  "trend": "flat", "components": {"unrest": 18, "conflict": 58, "security": 32, "information": 8}},
+        {"code": "NG", "name": "Nigeria",      "score": 40, "level": "elevated",  "trend": "flat", "components": {"unrest": 22, "conflict": 48, "security": 22, "information": 6}},
+        {"code": "PK", "name": "Pakistan",     "score": 38, "level": "normal",    "trend": "flat", "components": {"unrest": 20, "conflict": 42, "security": 20, "information": 6}}
+      ]
+    },
+    {
+      "name": "taiwan_tension",
+      "signals": [
+        {
+          "id": "a1b2c3d4-0003-0003-0003-000000000001",
+          "created_at": "2026-04-23T14:00:00Z",
+          "sector_tags": ["geopolitical", "tech"],
+          "confidence": 0.91,
+          "ai_implications": {
+            "summary": "PLA naval exercises encircling Taiwan trigger semiconductor supply chain panic. TSMC's foundry concentration risk comes into sharp focus. Defense contractors rally on perceived escalation probability.",
+            "affected_sectors": ["tech", "defense", "energy", "materials"],
+            "tickers": [
+              {"symbol": "XLK", "direction": "bearish", "confidence": 0.89, "reasoning": "Tech sector faces existential chip supply risk; TSMC produces 92% of leading-edge chips under 5nm."},
+              {"symbol": "LMT", "direction": "bullish", "confidence": 0.87, "reasoning": "Lockheed benefits from accelerated defense procurement; Taiwan scenario triggers allied military spending."},
+              {"symbol": "RTX", "direction": "bullish", "confidence": 0.84, "reasoning": "Raytheon missile systems (PAC-3, AMRAAM) in high demand; backlog expansion expected."},
+              {"symbol": "GLD", "direction": "bullish", "confidence": 0.83, "reasoning": "Flight to safety in maximum geopolitical risk scenario; gold historically +5-8% in Taiwan tension episodes."},
+              {"symbol": "XLE", "direction": "bullish", "confidence": 0.76, "reasoning": "Taiwan Strait closure forces Indo-Pacific energy rerouting, tightening regional supply."}
+            ],
+            "overall_confidence": 0.91,
+            "historical_pattern": "August 2022 Pelosi visit triggered 4% XLK selloff and 3% defense rally. Full blockade scenario has no direct historical precedent but semiconductor supply shock of 2021 (COVID) provides partial analog."
+          },
+          "events": [
+            {"id": "e3000001-0003-0003-0003-000000000001", "title": "PLA announces live-fire exercises in six zones encircling Taiwan, effective immediately", "source": "NewsAPI", "magnitude": 0.94},
+            {"id": "e3000002-0003-0003-0003-000000000002", "title": "Taiwan imposes emergency semiconductor export controls amid military escalation", "source": "NewsAPI", "magnitude": 0.88},
+            {"id": "e3000003-0003-0003-0003-000000000003", "title": "XLK moved -2.9% today", "source": "yfinance", "magnitude": 0.76},
+            {"id": "e3000004-0003-0003-0003-000000000004", "title": "GLD moved +1.8% today", "source": "yfinance", "magnitude": 0.52}
+          ]
+        },
+        {
+          "id": "a1b2c3d4-0003-0003-0003-000000000002",
+          "created_at": "2026-04-23T13:45:00Z",
+          "sector_tags": ["credit", "financials"],
+          "confidence": 0.77,
+          "ai_implications": {
+            "summary": "HY credit spreads widening 62bps in a single session as Taiwan risk spills into credit markets. Financial conditions tightening rapidly; small-cap credit exposure most vulnerable.",
+            "affected_sectors": ["financials", "real_estate"],
+            "tickers": [
+              {"symbol": "HYG", "direction": "bearish", "confidence": 0.82, "reasoning": "High yield bond ETF directly exposed to spread widening; forced selling from risk-parity funds."},
+              {"symbol": "XLF", "direction": "bearish", "confidence": 0.74, "reasoning": "Bank loan books face mark-to-market losses; flight to safety reduces net interest income outlook."},
+              {"symbol": "KRE", "direction": "bearish", "confidence": 0.71, "reasoning": "Regional banks overweight CRE loans which reprice adversely in credit stress events."}
+            ],
+            "overall_confidence": 0.77,
+            "historical_pattern": "March 2020 COVID credit shock saw HY spreads widen 700bps peak-to-trough over 30 days; Taiwan scenario likely shallower but faster."
+          },
+          "events": [
+            {"id": "e3000005-0003-0003-0003-000000000005", "title": "BAMLH0A0HYM2 HY spread deviation from 90-day MA: +22.1%", "source": "FRED", "magnitude": 0.81},
+            {"id": "e3000006-0003-0003-0003-000000000006", "title": "XLF moved -1.7% today", "source": "yfinance", "magnitude": 0.44}
+          ]
+        }
+      ],
+      "brief": {
+        "content": "PLA encirclement exercises around Taiwan have triggered the most significant semiconductor supply chain risk event since COVID. XLK shed 2.9% as markets priced TSMC disruption probability. Defense contractors (LMT, RTX) are rallying on accelerated procurement expectations. Credit markets are reacting sharply — HY spreads widened 62bps intraday, pressuring financials and regional banks. Gold is catching a strong safe-haven bid (+1.8%). The scenario has limited historical precedent; the 2022 Pelosi visit offers a lower-severity baseline, while the 2021 chip shortage provides a supply-side analog. Downside tail risk for tech is non-trivial.",
+        "created_at": "2026-04-23T14:00:00Z"
+      },
+      "macro": [
+        {"series_id": "FEDFUNDS", "label": "Fed Funds Rate", "value": 5.33, "units": "%", "trend": "flat", "magnitude": 0.01, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "T10Y2Y", "label": "Yield Curve (10Y-2Y)", "value": -0.55, "units": "%", "trend": "down", "magnitude": 0.14, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "BAMLH0A0HYM2", "label": "HY Credit Spread", "value": 4.44, "units": "%", "trend": "up", "magnitude": 0.22, "fetched_at": "2026-04-23T12:00:00Z"},
+        {"series_id": "ICSA", "label": "Jobless Claims", "value": 231000, "units": "thousands", "trend": "up", "magnitude": 0.07, "fetched_at": "2026-04-23T12:00:00Z"}
+      ],
+      "chokepoints": [
+        {"name": "Strait of Hormuz", "risk_level": "elevated", "top_tickers": [{"symbol": "USO", "direction": "bullish"}, {"symbol": "XLE", "direction": "bullish"}], "signal_count": 1},
+        {"name": "Suez Canal", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Taiwan Strait", "risk_level": "critical", "top_tickers": [{"symbol": "XLK", "direction": "bearish"}, {"symbol": "LMT", "direction": "bullish"}], "signal_count": 4},
+        {"name": "Bab el-Mandeb", "risk_level": "normal", "top_tickers": [], "signal_count": 0},
+        {"name": "Kerch Strait", "risk_level": "normal", "top_tickers": [], "signal_count": 0}
+      ],
+      "risk": [
+        {"code": "CN", "name": "China",        "score": 78, "level": "critical",  "trend": "up",   "components": {"unrest": 20, "conflict": 82, "security": 78, "information": 18}},
+        {"code": "TW", "name": "Taiwan",       "score": 74, "level": "critical",  "trend": "up",   "components": {"unrest": 42, "conflict": 78, "security": 70, "information": 20}},
+        {"code": "KP", "name": "North Korea",  "score": 72, "level": "critical",  "trend": "up",   "components": {"unrest": 5,  "conflict": 60, "security": 80, "information": 14}},
+        {"code": "RU", "name": "Russia",       "score": 68, "level": "high",      "trend": "flat", "components": {"unrest": 22, "conflict": 76, "security": 60, "information": 12}},
+        {"code": "UA", "name": "Ukraine",      "score": 63, "level": "high",      "trend": "flat", "components": {"unrest": 35, "conflict": 72, "security": 45, "information": 10}},
+        {"code": "IL", "name": "Israel",       "score": 58, "level": "high",      "trend": "flat", "components": {"unrest": 32, "conflict": 68, "security": 52, "information": 14}},
+        {"code": "IR", "name": "Iran",         "score": 56, "level": "high",      "trend": "flat", "components": {"unrest": 28, "conflict": 62, "security": 48, "information": 10}},
+        {"code": "YE", "name": "Yemen",        "score": 52, "level": "elevated",  "trend": "flat", "components": {"unrest": 25, "conflict": 65, "security": 35, "information": 10}},
+        {"code": "SY", "name": "Syria",        "score": 44, "level": "elevated",  "trend": "flat", "components": {"unrest": 18, "conflict": 55, "security": 30, "information": 8}},
+        {"code": "MM", "name": "Myanmar",      "score": 40, "level": "elevated",  "trend": "flat", "components": {"unrest": 28, "conflict": 48, "security": 22, "information": 6}}
+      ]
+    }
+  ]
+}
