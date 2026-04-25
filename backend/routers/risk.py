@@ -32,7 +32,7 @@ log = logging.getLogger(__name__)
 
 _TIMEOUT = 20
 _CACHE: list | None = None
-_CACHE_TS: float = 0.0
+_CACHE_TS: float = -1.0   # start invalidated so first request always recomputes
 _CACHE_TTL = 30 * 60  # 30 minutes
 
 # Bump this whenever the scoring logic changes to invalidate stale cache
@@ -76,32 +76,76 @@ _CONFLICT_KW = {
     "military", "battle", "combat", "offensive", "shelling", "attack",
     "soldiers", "war", "assault", "siege", "shoot", "explosion", "bomb",
     "sniper", "drone strike", "idf", "airforce", "navy", "ground forces",
+    "invasion", "invaded", "strikes", "advance", "casualt", "dead",
+    "intercept", "weapon", "armed", "frontline", "ceasefire", "fire",
+    "warplane", "warship", "nuclear", "tank", "rocket", "grenade",
 }
 _UNREST_KW = {
     "protest", "riot", "uprising", "coup", "demonstration", "civil unrest",
     "clashes", "crackdown", "arrested", "detained", "opposition", "strike",
     "rally", "march", "dissidents", "exile", "jailed", "dissident",
+    "protesters", "activist", "repression", "censored", "suppressed",
+    "imprisoned", "unrest", "tension", "political crisis", "instability",
 }
 _SANCTIONS_KW = {
     "sanctions", "sanction", "embargo", "ofac", "asset freeze",
     "export controls", "trade restrictions", "blacklist", "designated",
     "treasury", "penalty", "tariff", "import ban",
+    "sanctioned", "punish", "restrict", "frozen", "blocked", "banned",
 }
 _CYBER_KW = {
     "cyberattack", "ransomware", "data breach", "hacked", "malware",
     "espionage", "ddos", "phishing", "intrusion", "cybersecurity",
     "spyware", "vulnerability", "zero-day", "apt",
+    "hack", "hacker", "infiltrat", "compromis", "spy", "surveillance",
 }
 _ECON_KW = {
     "economic crisis", "currency", "imf", "debt", "default", "inflation",
     "recession", "bank run", "financial crisis", "devaluation", "collapse",
     "capital controls", "bailout", "austerity", "gdp", "poverty",
+    "unemploy", "hunger", "food crisis", "shortage", "corrupt", "crash",
+    "hyperinflat", "aid", "humanitarian",
 }
 
-# Chronic instability floors (countries with low press coverage but real risk)
+# Chronic instability floors — countries with low press coverage but known real risk
 _FLOORS: dict[str, int] = {
     "KP": 45, "SY": 40, "AF": 40, "SS": 38, "CF": 35, "SO": 38,
     "ML": 32, "HT": 35, "YE": 42, "LY": 30, "SD": 38,
+    # Active conflict / heavy-sanction zones — should never score 0
+    "RU": 42, "UA": 50, "IL": 44, "IR": 40,
+    "IQ": 32, "MM": 40, "VE": 30, "PK": 26,
+    "PS": 55, "LB": 35, "CN": 22, "TW": 28,
+}
+
+# Per-dimension chronic-risk baselines (applied as max(gdelt_score, floor))
+# Prevents all-zero component bars when GDELT keyword hits are sparse
+_COMPONENT_FLOORS: dict[str, dict[str, int]] = {
+    "KP": {"conflict": 22, "unrest": 5,  "sanctions": 48, "cyber": 32, "econ_stress": 38},
+    "SY": {"conflict": 38, "unrest": 18, "sanctions": 28, "cyber": 8,  "econ_stress": 32},
+    "AF": {"conflict": 32, "unrest": 18, "sanctions": 18, "cyber": 5,  "econ_stress": 35},
+    "SS": {"conflict": 35, "unrest": 18, "sanctions": 10, "cyber": 0,  "econ_stress": 28},
+    "CF": {"conflict": 28, "unrest": 15, "sanctions": 10, "cyber": 0,  "econ_stress": 22},
+    "SO": {"conflict": 30, "unrest": 14, "sanctions": 10, "cyber": 0,  "econ_stress": 26},
+    "ML": {"conflict": 24, "unrest": 14, "sanctions": 10, "cyber": 0,  "econ_stress": 20},
+    "HT": {"conflict": 20, "unrest": 28, "sanctions": 5,  "cyber": 0,  "econ_stress": 28},
+    "YE": {"conflict": 45, "unrest": 18, "sanctions": 18, "cyber": 5,  "econ_stress": 30},
+    "LY": {"conflict": 25, "unrest": 14, "sanctions": 15, "cyber": 5,  "econ_stress": 22},
+    "SD": {"conflict": 32, "unrest": 16, "sanctions": 15, "cyber": 0,  "econ_stress": 28},
+    "RU": {"conflict": 38, "unrest": 16, "sanctions": 55, "cyber": 32, "econ_stress": 28},
+    "UA": {"conflict": 55, "unrest": 12, "sanctions": 14, "cyber": 35, "econ_stress": 28},
+    "IL": {"conflict": 48, "unrest": 22, "sanctions": 18, "cyber": 20, "econ_stress": 16},
+    "IR": {"conflict": 20, "unrest": 22, "sanctions": 55, "cyber": 28, "econ_stress": 38},
+    "PS": {"conflict": 60, "unrest": 30, "sanctions": 10, "cyber": 8,  "econ_stress": 35},
+    "IQ": {"conflict": 28, "unrest": 20, "sanctions": 10, "cyber": 5,  "econ_stress": 22},
+    "MM": {"conflict": 35, "unrest": 30, "sanctions": 25, "cyber": 10, "econ_stress": 22},
+    "VE": {"conflict": 10, "unrest": 32, "sanctions": 38, "cyber": 5,  "econ_stress": 48},
+    "PK": {"conflict": 22, "unrest": 28, "sanctions": 10, "cyber": 10, "econ_stress": 28},
+    "LB": {"conflict": 22, "unrest": 22, "sanctions": 14, "cyber": 8,  "econ_stress": 40},
+    "CN": {"conflict": 8,  "unrest": 12, "sanctions": 30, "cyber": 28, "econ_stress": 16},
+    "TW": {"conflict": 22, "unrest": 8,  "sanctions": 12, "cyber": 22, "econ_stress": 10},
+    "SA": {"conflict": 10, "unrest": 8,  "sanctions": 8,  "cyber": 8,  "econ_stress": 8 },
+    "NG": {"conflict": 22, "unrest": 18, "sanctions": 5,  "cyber": 5,  "econ_stress": 22},
+    "ET": {"conflict": 18, "unrest": 18, "sanctions": 8,  "cyber": 0,  "econ_stress": 18},
 }
 
 # Scoring weights
@@ -171,11 +215,12 @@ async def _score_country(code: str, name: str, query: str) -> dict:
     dims_24h = _classify_articles(arts_24h)
     dims_48h = _classify_articles(arts_48h)
 
-    conflict   = _count_to_score(dims_24h["conflict"],   9.0)
-    unrest     = _count_to_score(dims_24h["unrest"],     8.0)
-    sanctions  = _count_to_score(dims_48h["sanctions"],  6.0)
-    cyber      = _count_to_score(dims_48h["cyber"],      7.0)
-    econ       = _count_to_score(dims_48h["econ_stress"],7.0)
+    cf = _COMPONENT_FLOORS.get(code, {})
+    conflict   = max(cf.get("conflict",    0), _count_to_score(dims_24h["conflict"],   9.0))
+    unrest     = max(cf.get("unrest",      0), _count_to_score(dims_24h["unrest"],     8.0))
+    sanctions  = max(cf.get("sanctions",   0), _count_to_score(dims_48h["sanctions"],  6.0))
+    cyber      = max(cf.get("cyber",       0), _count_to_score(dims_48h["cyber"],      7.0))
+    econ       = max(cf.get("econ_stress", 0), _count_to_score(dims_48h["econ_stress"],7.0))
 
     raw = (
         conflict  * _WEIGHTS["conflict"]   +
