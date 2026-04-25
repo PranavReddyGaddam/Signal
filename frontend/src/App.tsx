@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { Routes, Route } from "react-router-dom";
+import Presentation from "./pages/Presentation";
 import WorldMap from "./components/WorldMap";
 import SignalFeed from "./components/SignalFeed";
 import ImplicationsPanel from "./components/ImplicationsPanel";
@@ -39,6 +41,15 @@ function FullscreenButton({ onClick, size = "sm" }: { onClick: () => void; size?
 }
 
 export default function App() {
+  return (
+    <Routes>
+      <Route path="/presentation" element={<Presentation />} />
+      <Route path="*" element={<Dashboard />} />
+    </Routes>
+  );
+}
+
+function Dashboard() {
   const [selectedSignal, setSelectedSignal] = useState<Signal | null>(null);
   const backendStatus = useBackendStatus();
   const [fullscreen, setFullscreen] = useState<FullscreenTarget>(null);
