@@ -693,7 +693,7 @@ function persistLayers(layers: Set<LayerId>) {
 }
 
 // ─── WorldMap ─────────────────────────────────────────────────────────────────
-export default function WorldMap() {
+export default function WorldMap({ onFullscreen }: { onFullscreen?: () => void }) {
   const [chokepoints, setChokepoints]   = useState<Chokepoint[]>([])
   const [showLayers, setShowLayers]     = useState(false)
   const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(loadPersistedLayers)
@@ -759,7 +759,16 @@ export default function WorldMap() {
       </div>
 
       {/* Controls — rendered after map, z-index above Leaflet's ceiling (700) */}
-      <div className="absolute top-2 right-2 flex items-center gap-1" style={{ zIndex: 1000 }}>
+      <div className="absolute top-2 right-2 flex items-center gap-1.5" style={{ zIndex: 1000 }}>
+        {onFullscreen && (
+          <button
+            onClick={onFullscreen}
+            title="Fullscreen"
+            className="text-[16px] font-black px-2.5 py-1.5 border-2 border-[#0a0a0a] bg-white hover:bg-[#f5f0e8] shadow-[2px_2px_0_#0a0a0a] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all leading-none"
+          >
+            ⛶
+          </button>
+        )}
         {!selectedCountry && (
           <button
             onClick={() => setShowLayers(v => !v)}
