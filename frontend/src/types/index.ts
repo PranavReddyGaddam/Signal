@@ -35,9 +35,12 @@ export interface BriefKPIs {
   sectors_affected: number
   primary_sector: string
   top_theme: string
+  top_theme_detail?: string
   watch: string
+  watch_reason?: string
   cross_sector_correlation: 'high' | 'moderate' | 'low'
   regime: string
+  regime_action?: string
 }
 
 export interface Brief {

@@ -2,6 +2,7 @@ import asyncio
 import json
 from pathlib import Path
 from fastapi import APIRouter, Request, Query
+import ai.brief as ai_brief_mod
 
 router = APIRouter()
 _fixtures: dict | None = None
@@ -47,3 +48,13 @@ async def get_brief(
         return {"kpis": kpis, "content": None, "created_at": row["created_at"]}
     except (json.JSONDecodeError, TypeError):
         return {"content": content, "kpis": None, "created_at": row["created_at"]}
+
+
+@router.post("/brief/refresh")
+async def refresh_brief(request: Request):
+    db = request.app.state.db
+    if db is None:
+        return {"status": "error", "message": "No database connection"}
+    ai_brief_mod.set_db(db)
+    await ai_brief_mod.run()
+    return {"status": "ok"}

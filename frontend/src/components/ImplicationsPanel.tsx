@@ -5,28 +5,22 @@ interface Props {
 }
 
 export default function ImplicationsPanel({ signal }: Props) {
-  if (!signal) {
-    return (
-      <div className="px-4 py-10 flex items-center justify-center">
-        <p className="text-[11px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]/30 text-center">
-          Select a signal to view implications
-        </p>
-      </div>
-    )
-  }
+  if (!signal) return null
 
   const { tickers = [], historical_pattern } = signal.ai_implications
   const sorted = [...tickers].sort((a, b) => b.confidence - a.confidence)
 
   return (
-    <div className="overflow-y-auto h-full">
+    <div className="flex flex-col">
+      {/* Pinned header */}
       <div className="px-3 py-2.5 border-b-[3px] border-[#0a0a0a] bg-white shrink-0">
         <span className="text-[11px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]">
           Ticker Implications
         </span>
       </div>
 
-      <div className="p-3 space-y-2">
+      {/* Scrollable ticker list */}
+      <div className="overflow-y-auto p-3 space-y-2" style={{ maxHeight: '380px' }}>
         {sorted.map(t => (
           <div
             key={t.symbol}
