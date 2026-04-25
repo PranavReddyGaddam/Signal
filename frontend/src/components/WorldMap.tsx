@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { fetchChokepoints } from '../api/client'
-import type { Chokepoint } from '../types'
+import type { MutableRefObject } from 'react'
+import { fetchChokepoints, fetchRiskDetail } from '../api/client'
+import type { Chokepoint, CountryRisk } from '../types'
 import type { PointFeature, LineFeature } from '../api/client'
+import CountryStatSheet from './CountryStatSheet'
+import CountryModal from './CountryModal'
 import {
   fetchConflictLayer,
   fetchClimateLayer,
@@ -133,6 +136,42 @@ const COUNTRY_NAME_ALIASES: Record<string, string> = {
 function resolveGeoName(country: string): string {
   return COUNTRY_NAME_ALIASES[country] ?? country
 }
+
+// Tracked countries: GeoJSON name → { code, center [lat, lng], zoom }
+const TRACKED: Record<string, { code: string; name: string; center: [number, number]; zoom: number }> = {
+  'Iran':                     { code: 'IR', name: 'Iran',                     center: [32.4, 53.7],  zoom: 5 },
+  'Russia':                   { code: 'RU', name: 'Russia',                   center: [61.5, 90.0],  zoom: 3 },
+  'Ukraine':                  { code: 'UA', name: 'Ukraine',                  center: [49.0, 31.5],  zoom: 6 },
+  'Israel':                   { code: 'IL', name: 'Israel',                   center: [31.5, 35.0],  zoom: 7 },
+  'Palestine':                { code: 'PS', name: 'Palestine',                center: [31.9, 35.2],  zoom: 8 },
+  'Yemen':                    { code: 'YE', name: 'Yemen',                    center: [15.6, 48.5],  zoom: 6 },
+  'Syria':                    { code: 'SY', name: 'Syria',                    center: [34.8, 38.9],  zoom: 6 },
+  'Afghanistan':              { code: 'AF', name: 'Afghanistan',              center: [33.9, 67.7],  zoom: 5 },
+  'Iraq':                     { code: 'IQ', name: 'Iraq',                     center: [33.2, 43.7],  zoom: 6 },
+  'Pakistan':                 { code: 'PK', name: 'Pakistan',                 center: [30.4, 69.3],  zoom: 5 },
+  'Sudan':                    { code: 'SD', name: 'Sudan',                    center: [15.6, 32.5],  zoom: 5 },
+  'Ethiopia':                 { code: 'ET', name: 'Ethiopia',                 center: [9.1,  40.5],  zoom: 5 },
+  'Libya':                    { code: 'LY', name: 'Libya',                    center: [26.3, 17.2],  zoom: 5 },
+  'Myanmar':                  { code: 'MM', name: 'Myanmar',                  center: [19.2, 96.7],  zoom: 6 },
+  'North Korea':              { code: 'KP', name: 'North Korea',              center: [40.3, 127.5], zoom: 6 },
+  'Venezuela':                { code: 'VE', name: 'Venezuela',                center: [8.0,  -66.6], zoom: 5 },
+  'Nigeria':                  { code: 'NG', name: 'Nigeria',                  center: [9.1,   8.7],  zoom: 5 },
+  'Mexico':                   { code: 'MX', name: 'Mexico',                   center: [23.6, -102.6],zoom: 5 },
+  'Turkey':                   { code: 'TR', name: 'Turkey',                   center: [38.9, 35.2],  zoom: 5 },
+  'China':                    { code: 'CN', name: 'China',                    center: [35.9, 104.2], zoom: 4 },
+  'Taiwan':                   { code: 'TW', name: 'Taiwan',                   center: [23.7, 121.0], zoom: 7 },
+  'Saudi Arabia':             { code: 'SA', name: 'Saudi Arabia',             center: [24.0, 45.0],  zoom: 5 },
+  'South Sudan':              { code: 'SS', name: 'South Sudan',              center: [7.9,  30.2],  zoom: 6 },
+  'Somalia':                  { code: 'SO', name: 'Somalia',                  center: [5.2,  46.2],  zoom: 6 },
+  'Mali':                     { code: 'ML', name: 'Mali',                     center: [17.6, -4.0],  zoom: 5 },
+  'Haiti':                    { code: 'HT', name: 'Haiti',                    center: [18.9, -72.3], zoom: 7 },
+  'Lebanon':                  { code: 'LB', name: 'Lebanon',                  center: [33.9, 35.9],  zoom: 8 },
+  'Central African Republic': { code: 'CF', name: 'CAR',                      center: [6.6,  20.9],  zoom: 6 },
+}
+
+// Reverse lookup: code → TRACKED entry (for click handler)
+const TRACKED_BY_CODE: Record<string, { name: string; center: [number, number]; zoom: number }> =
+  Object.fromEntries(Object.values(TRACKED).map(v => [v.code, v]))
 
 // ─── Layer filter panel ───────────────────────────────────────────────────────
 function LayerPanel({
@@ -415,9 +454,13 @@ async function renderLayer(
 function Map2D({
   chokepoints,
   activeLayers,
+  onCountryClick,
+  mapRef: externalMapRef,
 }: {
   chokepoints: Chokepoint[]
   activeLayers: Set<LayerId>
+  onCountryClick: (code: string) => void
+  mapRef?: MutableRefObject<any>
 }) {
   const mapRef          = useRef<HTMLDivElement>(null)
   const leafletMapRef   = useRef<any>(null)
@@ -455,7 +498,38 @@ function Map2D({
 
       leafletRef.current    = L
       leafletMapRef.current = map
+      if (externalMapRef) externalMapRef.current = map
       map.invalidateSize()
+
+      // Add clickable invisible overlay for tracked countries
+      const geo = await loadWorldGeoJson()
+      if (geo) {
+        L.geoJSON(geo, {
+          style: () => ({
+            color: 'transparent',
+            weight: 0,
+            fillColor: 'transparent',
+            fillOpacity: 0,
+          }),
+          onEachFeature: (feat: any, layer: any) => {
+            const name: string = feat.properties?.name ?? ''
+            const tracked = TRACKED[name]
+            if (!tracked) return
+            layer.on('mouseover', () => {
+              layer.setStyle({ fillColor: '#ffd700', fillOpacity: 0.15, color: '#ffd700', weight: 1.5 })
+              map.getContainer().style.cursor = 'pointer'
+            })
+            layer.on('mouseout', () => {
+              layer.setStyle({ fillColor: 'transparent', fillOpacity: 0, color: 'transparent', weight: 0 })
+              map.getContainer().style.cursor = ''
+            })
+            layer.on('click', () => {
+              map.flyTo(tracked.center, tracked.zoom, { duration: 1.2 })
+              onCountryClick(tracked.code)
+            })
+          },
+        }).addTo(map)
+      }
 
       // Run any sync that was queued before the map was ready
       pendingSyncRef.current?.()
@@ -619,10 +693,14 @@ function persistLayers(layers: Set<LayerId>) {
 }
 
 // ─── WorldMap ─────────────────────────────────────────────────────────────────
-export default function WorldMap() {
+export default function WorldMap({ onFullscreen }: { onFullscreen?: () => void }) {
   const [chokepoints, setChokepoints]   = useState<Chokepoint[]>([])
   const [showLayers, setShowLayers]     = useState(false)
   const [activeLayers, setActiveLayers] = useState<Set<LayerId>>(loadPersistedLayers)
+  const [selectedCountry, setSelectedCountry] = useState<CountryRisk | null>(null)
+  const [loadingCountry, setLoadingCountry] = useState(false)
+  const [fullReportCountry, setFullReportCountry] = useState<CountryRisk | null>(null)
+  const mapRef2D = useRef<any>(null)
 
   useEffect(() => {
     fetchChokepoints().then(setChokepoints)
@@ -640,33 +718,77 @@ export default function WorldMap() {
     })
   }, [])
 
+  const handleCountryClick = useCallback((code: string) => {
+    const meta = TRACKED_BY_CODE[code]
+    if (!meta) return
+
+    // Show placeholder immediately
+    setSelectedCountry({
+      code,
+      name: meta.name,
+      score: 0,
+      level: 'normal',
+      trend: 'flat',
+      components: { conflict: 0, unrest: 0, sanctions: 0, cyber: 0, econ_stress: 0 },
+    })
+    setLoadingCountry(true)
+
+    // Fetch real scores via the per-country endpoint (works for all watched countries)
+    fetchRiskDetail(code).then(data => {
+      setSelectedCountry(data)
+      setLoadingCountry(false)
+    }).catch(() => setLoadingCountry(false))
+  }, [])
+
+  const handleClose = useCallback(() => {
+    setSelectedCountry(null)
+    // Zoom back out
+    mapRef2D.current?.flyTo([25, 15], 2, { duration: 1.0 })
+  }, [])
+
   return (
     <div className="relative w-full h-full">
       {/* Map renders first so controls sit on top in DOM order */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
-        <Map2D chokepoints={chokepoints} activeLayers={activeLayers} />
+        <Map2D
+          chokepoints={chokepoints}
+          activeLayers={activeLayers}
+          onCountryClick={handleCountryClick}
+          mapRef={mapRef2D}
+        />
       </div>
 
       {/* Controls — rendered after map, z-index above Leaflet's ceiling (700) */}
-      <div className="absolute top-2 right-2 flex items-center gap-1" style={{ zIndex: 1000 }}>
-        <button
-          onClick={() => setShowLayers(v => !v)}
-          title="Map Layers"
-          className={`px-2.5 py-1 text-[11px] font-black uppercase tracking-wider border-2 border-[#0a0a0a] transition-none
-            ${showLayers
-              ? 'bg-[#ffd700] text-[#0a0a0a] shadow-[2px_2px_0_#0a0a0a]'
-              : 'bg-white text-[#0a0a0a] shadow-[2px_2px_0_#0a0a0a] hover:bg-[#f5f0e8]'
-            }`}
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
-            <polygon points="12 2 22 8.5 12 15 2 8.5 12 2" />
-            <polyline points="2 15.5 12 22 22 15.5" />
-            <polyline points="2 12 12 18.5 22 12" />
-          </svg>
-        </button>
+      <div className="absolute top-2 right-2 flex items-center gap-1.5" style={{ zIndex: 1000 }}>
+        {onFullscreen && (
+          <button
+            onClick={onFullscreen}
+            title="Fullscreen"
+            className="text-[16px] font-black px-2.5 py-1.5 border-2 border-[#0a0a0a] bg-white hover:bg-[#f5f0e8] shadow-[2px_2px_0_#0a0a0a] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all leading-none"
+          >
+            ⛶
+          </button>
+        )}
+        {!selectedCountry && (
+          <button
+            onClick={() => setShowLayers(v => !v)}
+            title="Map Layers"
+            className={`px-2.5 py-1 text-[11px] font-black uppercase tracking-wider border-2 border-[#0a0a0a] transition-none
+              ${showLayers
+                ? 'bg-[#ffd700] text-[#0a0a0a] shadow-[2px_2px_0_#0a0a0a]'
+                : 'bg-white text-[#0a0a0a] shadow-[2px_2px_0_#0a0a0a] hover:bg-[#f5f0e8]'
+              }`}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="square">
+              <polygon points="12 2 22 8.5 12 15 2 8.5 12 2" />
+              <polyline points="2 15.5 12 22 22 15.5" />
+              <polyline points="2 12 12 18.5 22 12" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      {showLayers && (
+      {showLayers && !selectedCountry && (
         <div className="absolute top-[42px] right-2" style={{ zIndex: 1000 }}>
           <LayerPanel
             activeLayers={activeLayers}
@@ -679,6 +801,26 @@ export default function WorldMap() {
       <div className="absolute bottom-2 left-2" style={{ zIndex: 1000 }}>
         <MapLegend activeLayers={activeLayers} />
       </div>
+
+      {/* Country stat sheet — positioned absolutely within the map section */}
+      {selectedCountry && (
+        <div className="absolute top-3 right-3" style={{ zIndex: 1100 }}>
+          <CountryStatSheet
+            country={selectedCountry}
+            loading={loadingCountry}
+            onClose={handleClose}
+            onFullReport={() => setFullReportCountry(selectedCountry)}
+          />
+        </div>
+      )}
+
+      {/* Full report modal */}
+      {fullReportCountry && (
+        <CountryModal
+          country={fullReportCountry}
+          onClose={() => setFullReportCountry(null)}
+        />
+      )}
     </div>
   )
 }

@@ -25,12 +25,13 @@ type FullscreenTarget =
   | "risk"
   | null;
 
-function FullscreenButton({ onClick }: { onClick: () => void }) {
+function FullscreenButton({ onClick, size = "sm" }: { onClick: () => void; size?: "sm" | "lg" }) {
   return (
     <button
       onClick={onClick}
       title="Fullscreen"
-      className="text-[9px] font-black px-1.5 py-0.5 border-2 border-[#0a0a0a] bg-white hover:bg-[#f5f0e8] shadow-[2px_2px_0_#0a0a0a] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all leading-none"
+      className={`font-black border-2 border-[#0a0a0a] bg-white hover:bg-[#f5f0e8] shadow-[2px_2px_0_#0a0a0a] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all leading-none
+        ${size === "lg" ? "text-[16px] px-2.5 py-1.5" : "text-[9px] px-1.5 py-0.5"}`}
     >
       ⛶
     </button>
@@ -121,6 +122,7 @@ export default function App() {
                 ? "Offline"
                 : "Connecting..."}
           </span>
+          
           <div className="ml-auto flex items-center gap-4">
             <button
               onClick={triggerRefresh}
@@ -186,10 +188,7 @@ export default function App() {
           className="overflow-hidden border-b-[3px] border-[#0a0a0a] bg-[#0a0a0a] relative"
           style={{ gridArea: "map" }}
         >
-          <div className="absolute top-2 left-2 z-50">
-            <FullscreenButton onClick={fs("map")} />
-          </div>
-          <WorldMap key={refreshKey} />
+          <WorldMap key={refreshKey} onFullscreen={fs("map")} />
         </section>
 
         {/* ── Signal Feed ─────────────────────────────────────────────────── */}
