@@ -122,6 +122,7 @@ export default function App() {
                 ? "Offline"
                 : "Connecting..."}
           </span>
+          
           <div className="ml-auto flex items-center gap-4">
             <button
               onClick={triggerRefresh}
