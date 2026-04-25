@@ -25,7 +25,6 @@ function kpisFromText(text: string): BriefKPIs {
   const found = sectorWords.filter(s => lower.includes(s))
   const primarySector = found.length > 0 ? found[0].charAt(0).toUpperCase() + found[0].slice(1) : 'Macro'
 
-  // Top theme: use a fixed descriptive label based on detected conditions, not a regex capture
   const topTheme = corrHigh
     ? 'Cross-sector systemic stress'
     : riskOff
@@ -34,29 +33,43 @@ function kpisFromText(text: string): BriefKPIs {
     ? 'Risk asset momentum'
     : 'Macro regime shift'
 
-  // Regime: fixed label, not a regex capture from surrounding text
+  const topThemeDetail = corrHigh
+    ? `Simultaneous pressure across ${sectors} sectors indicates systemic risk rather than isolated sector moves.`
+    : riskOff
+    ? `Defensive posture driven by macro uncertainty — capital rotating out of risk assets into safe havens.`
+    : riskOn
+    ? `Improving macro conditions and sector breadth supporting risk appetite across ${primarySector} and peers.`
+    : `Shifting macro regime with uncertain direction — monitor ${primarySector} for early trend confirmation.`
+
   const regime = riskOff
     ? 'Cautiously defensive'
     : riskOn
     ? 'Risk-on expansion'
     : 'Elevated uncertainty'
 
-  // Watch: first recognized leading indicator keyword
-  const watchMap: [RegExp, string][] = [
-    [/credit spread/i,      'Credit spreads'],
-    [/yield curve/i,        'Yield curve'],
-    [/volatility|vix/i,     'Volatility (VIX)'],
-    [/commodity/i,          'Commodity prices'],
-    [/dollar|dxy/i,         'USD / DXY'],
-    [/inflation|cpi/i,      'Inflation (CPI)'],
-    [/fed|rate decision/i,  'Fed rate decisions'],
-    [/earnings/i,           'Earnings revisions'],
+  const regimeAction = riskOff
+    ? `Reduce equity beta, increase cash and short-duration bonds; hedge with ${primarySector === 'Energy' ? 'XLE puts' : 'VIX calls'}.`
+    : riskOn
+    ? `Add cyclical exposure in ${primarySector}; reduce defensive overweights as momentum broadens.`
+    : `Hold current allocations; wait for sector confirmation before adding risk.`
+
+  const watchMap: [RegExp, string, string][] = [
+    [/credit spread/i,      'HYG / LQD Credit Spreads',  'Widening spreads signal rising default risk across credit markets'],
+    [/yield curve/i,        'Yield Curve (2s10s)',         'Inversion depth drives recession probability and bank margin compression'],
+    [/volatility|vix/i,     'VIX Volatility Index',        'Spike above 25 signals institutional hedging and forced de-risking'],
+    [/commodity/i,          'Commodity Complex (CRB)',     'Broad commodity moves reflect global growth and supply chain stress'],
+    [/dollar|dxy/i,         'USD / DXY Index',             'Dollar strength pressures EM assets and commodity-sensitive equities'],
+    [/inflation|cpi/i,      'CPI / Breakeven Inflation',   'Inflation surprises force Fed hand and reprice rate-sensitive assets'],
+    [/fed|rate decision/i,  'Fed Funds Futures',           'Repricing of rate path moves all asset classes simultaneously'],
+    [/earnings/i,           'Earnings Revision Breadth',   'Negative revisions leading indicator of equity multiple compression'],
   ]
   const watchEntry = watchMap.find(([re]) => re.test(lower))
-  const watch = watchEntry ? watchEntry[1] : 'Credit spreads and volatility'
+  const watch = watchEntry ? watchEntry[1] : 'HYG / LQD Credit Spreads'
+  const watchReason = watchEntry ? watchEntry[2] : 'Credit stress typically leads equity drawdowns by 2–4 weeks'
 
   return { risk_posture: posture, signal_confidence: confidence, sectors_affected: sectors,
-    primary_sector: primarySector, top_theme: topTheme, watch, cross_sector_correlation: corr, regime }
+    primary_sector: primarySector, top_theme: topTheme, top_theme_detail: topThemeDetail,
+    watch, watch_reason: watchReason, cross_sector_correlation: corr, regime, regime_action: regimeAction }
 }
 
 const POSTURE_STYLE: Record<BriefKPIs['risk_posture'], { bg: string; text: string; border: string; badge: string }> = {
@@ -72,12 +85,16 @@ const CORR_STYLE: Record<BriefKPIs['cross_sector_correlation'], { color: string;
 }
 
 function ConfidenceBar({ value }: { value: number }) {
-  const color = value >= 70 ? '#1b5e20' : value >= 50 ? '#bf360c' : '#c62828'
+  const color = value >= 75 ? '#1b5e20' : value >= 55 ? '#bf360c' : '#c62828'
+  const tier  = value >= 75 ? 'HIGH' : value >= 55 ? 'MODERATE' : 'LOW'
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-end">
         <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]/50">Signal Confidence</span>
-        <span className="text-[18px] font-black font-mono leading-none" style={{ color }}>{value}%</span>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-[9px] font-black uppercase tracking-wider" style={{ color, opacity: 0.75 }}>{tier}</span>
+          <span className="text-[18px] font-black font-mono leading-none" style={{ color }}>{value}%</span>
+        </div>
       </div>
       <div className="h-3 w-full border-2 border-[#0a0a0a] bg-[#f0f0f0] relative">
         <div style={{ width: `${value}%`, background: color, height: '100%', transition: 'width 0.6s ease' }} />
@@ -114,6 +131,11 @@ function KPIGrid({ kpis }: { kpis: BriefKPIs }) {
               {kpis.regime}
             </span>
           </div>
+          {kpis.regime_action && (
+            <span className="text-[9.5px] leading-snug" style={{ color: postureStyle.text, opacity: 0.8 }}>
+              {kpis.regime_action}
+            </span>
+          )}
         </div>
 
         {/* Confidence bar */}
@@ -137,12 +159,16 @@ function KPIGrid({ kpis }: { kpis: BriefKPIs }) {
         {/* Cross-sector correlation */}
         <div className="border-2 border-[#0a0a0a] p-3 flex flex-col gap-1 shadow-[2px_2px_0_#0a0a0a]"
           style={{ background: corrStyle.bg, borderLeftWidth: 4, borderLeftColor: corrStyle.color }}>
-          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]/50">Cross-Sector Corr.</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]/50">Contagion Risk</span>
           <span className="text-[15px] font-black uppercase leading-tight" style={{ color: corrStyle.color }}>
             {kpis.cross_sector_correlation}
           </span>
-          <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: corrStyle.color, opacity: 0.7 }}>
-            correlation
+          <span className="text-[9px] font-bold leading-snug" style={{ color: corrStyle.color, opacity: 0.8 }}>
+            {kpis.cross_sector_correlation === 'high'
+              ? 'Stress spreading across sectors'
+              : kpis.cross_sector_correlation === 'moderate'
+              ? 'Partial cross-sector spillover'
+              : 'Risk contained to primary sector'}
           </span>
         </div>
 
@@ -151,14 +177,22 @@ function KPIGrid({ kpis }: { kpis: BriefKPIs }) {
           style={{ borderLeftWidth: 4, borderLeftColor: '#0a0a0a' }}>
           <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#0a0a0a]/50">Top Theme</span>
           <span className="text-[11px] font-black text-[#0a0a0a] leading-snug">{kpis.top_theme}</span>
+          {kpis.top_theme_detail && (
+            <span className="text-[9px] text-[#0a0a0a]/60 leading-snug mt-0.5">{kpis.top_theme_detail}</span>
+          )}
         </div>
       </div>
 
       {/* Row 3: Watch bar */}
-      <div className="border-2 border-[#0a0a0a] bg-[#ffd700] px-4 py-2.5 flex items-center gap-3 shadow-[2px_2px_0_#0a0a0a]">
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0a0a0a]/60 shrink-0">Watch</span>
-        <div className="w-px h-4 bg-[#0a0a0a]/20 shrink-0" />
-        <span className="text-[11px] font-black text-[#0a0a0a]">{kpis.watch}</span>
+      <div className="border-2 border-[#0a0a0a] bg-[#ffd700] px-4 py-2.5 flex flex-col gap-0.5 shadow-[2px_2px_0_#0a0a0a]">
+        <div className="flex items-center gap-3">
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#0a0a0a]/60 shrink-0">Watch</span>
+          <div className="w-px h-3 bg-[#0a0a0a]/20 shrink-0" />
+          <span className="text-[11px] font-black text-[#0a0a0a]">{kpis.watch}</span>
+        </div>
+        {kpis.watch_reason && (
+          <span className="text-[9px] text-[#0a0a0a]/70 pl-[calc(2.2rem)]">{kpis.watch_reason}</span>
+        )}
       </div>
     </div>
   )

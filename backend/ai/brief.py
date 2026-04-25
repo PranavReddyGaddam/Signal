@@ -52,9 +52,9 @@ async def run() -> None:
         client = anthropic.AsyncAnthropic(api_key=api_key)
         response = await client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=512,
+            max_tokens=800,
             system=(
-                "You are a financial intelligence analyst. "
+                "You are a senior financial intelligence analyst writing a professional market brief. "
                 "Given market signals, return ONLY valid JSON with this exact schema — no prose, no markdown:\n"
                 "{\n"
                 '  "risk_posture": "risk-on" | "risk-off" | "neutral",\n'
@@ -62,15 +62,23 @@ async def run() -> None:
                 '  "sectors_affected": <integer count>,\n'
                 '  "primary_sector": "<sector name>",\n'
                 '  "top_theme": "<≤6 word theme label>",\n'
-                '  "watch": "<≤8 word leading indicator to watch>",\n'
+                '  "top_theme_detail": "<1 sentence: what is driving this theme and why it matters>",\n'
+                '  "watch": "<specific indicator name, e.g. HYG credit spread, VIX, DXY>",\n'
+                '  "watch_reason": "<≤12 words: why this indicator is the key signal to monitor now>",\n'
                 '  "cross_sector_correlation": "high" | "moderate" | "low",\n'
-                '  "regime": "<≤5 word market regime label>"\n'
+                '  "regime": "<≤5 word market regime label>",\n'
+                '  "regime_action": "<1 concrete action-oriented sentence for portfolio positioning>"\n'
                 "}\n"
-                "Be precise. Use only data from the signals provided."
+                "Be specific and data-driven. Reference actual sectors, assets, or events from the signals."
             ),
             messages=[{"role": "user", "content": "Top market signals:\n" + "\n".join(summaries)}],
         )
         raw = response.content[0].text.strip()
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        raw = raw.strip()
         # Validate it's parseable JSON before storing
         json.loads(raw)
         brief_text = raw

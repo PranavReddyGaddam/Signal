@@ -247,8 +247,8 @@ export default function App() {
 
       {/* ── Below the fold: AI Brief + Ticker Implications ─────────────── */}
       <div
-        className="grid border-t-[3px] border-[#0a0a0a]"
-        style={{ gridTemplateColumns: "1fr 380px" }}
+        className="grid border-t-[3px] border-[#0a0a0a] transition-all duration-300"
+        style={{ gridTemplateColumns: selectedSignal ? "1fr 380px" : "1fr" }}
       >
         <section className="border-r-[3px] border-[#0a0a0a] bg-white relative">
           <div className="absolute top-2.5 right-3 z-10">
@@ -256,12 +256,14 @@ export default function App() {
           </div>
           <AIBrief key={refreshKey} />
         </section>
-        <section className="bg-[#f5f0e8] relative">
-          <div className="absolute top-2.5 right-3 z-10">
-            <FullscreenButton onClick={fs("implications")} />
-          </div>
-          <ImplicationsPanel signal={selectedSignal} />
-        </section>
+        {selectedSignal && (
+          <section className="bg-[#f5f0e8] relative border-l-[3px] border-[#0a0a0a]">
+            <div className="absolute top-2.5 right-3 z-10">
+              <FullscreenButton onClick={fs("implications")} />
+            </div>
+            <ImplicationsPanel signal={selectedSignal} />
+          </section>
+        )}
       </div>
 
       {/* ── Country Instability Index ────────────────────────────────────── */}
